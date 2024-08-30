@@ -170,15 +170,22 @@ def get_webdriver(proxy: dict = None) -> WebDriver:
 
   # downloads and patches the chromedriver
   # if we don't set driver_executable_path it downloads, patches, and deletes the driver each time
-  driver = uc.Chrome(options=options, browser_executable_path=browser_executable_path,
-    driver_executable_path=driver_exe_path, version_main=version_main,
-    windows_headless=windows_headless, headless=windows_headless)
+  driver = uc.Chrome(
+    options = options,
+    browser_executable_path = browser_executable_path,
+    driver_executable_path = driver_exe_path,
+    version_main = version_main,
+    windows_headless = windows_headless,
+    headless = windows_headless,
+    patch_driver = (PATCHED_DRIVER_PATH is None or driver_exe_path != PATCHED_DRIVER_PATH))
 
   # save the patched driver to avoid re-downloads
   if driver_exe_path is None:
     PATCHED_DRIVER_PATH = os.path.join(driver.patcher.data_path, driver.patcher.exe_name)
     if PATCHED_DRIVER_PATH != driver.patcher.executable_path:
       shutil.copy(driver.patcher.executable_path, PATCHED_DRIVER_PATH)
+  else :
+    PATCHED_DRIVER_PATH = driver_exe_path
 
   # clean up proxy extension directory
   if proxy_extension_dir is not None:
