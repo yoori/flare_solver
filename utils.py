@@ -283,21 +283,17 @@ def extract_version_nt_folder() -> str:
           return match.group(0)
   return ''
 
-def get_user_agent(driver=None) -> str:
+def get_user_agent(driver = None) -> str:
   global USER_AGENT
   if USER_AGENT is not None:
     return USER_AGENT
 
   try:
-    if driver is None:
-      driver = get_webdriver()
-    USER_AGENT = driver.execute_script("return navigator.userAgent")
-    return USER_AGENT
+    with (driver or get_webdriver()) as driver :
+      USER_AGENT = driver.execute_script("return navigator.userAgent")
+      return USER_AGENT
   except Exception as e:
     raise Exception("Error getting browser User-Agent. " + str(e))
-  finally:
-    if driver is not None:
-      driver.quit()
 
 def start_xvfb_display():
   global XVFB_DISPLAY
