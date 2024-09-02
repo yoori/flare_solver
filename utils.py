@@ -108,7 +108,7 @@ def create_proxy_extension(proxy: dict) -> str:
 
   return proxy_extension_dir
 
-def get_webdriver(proxy: dict = None) -> WebDriver:
+def get_webdriver(proxy: dict = None, version_main = None) -> WebDriver:
   global PATCHED_DRIVER_PATH
   logging.debug('Launching web browser...')
 
@@ -152,16 +152,16 @@ def get_webdriver(proxy: dict = None) -> WebDriver:
 
   # if we are inside the Docker container, we avoid downloading the driver
   driver_exe_path = None
-  version_main = None
+  use_version_main = version_main
   if os.path.exists("/app/bin/chromedriver"):
     # running inside Docker
     driver_exe_path = "/app/bin/chromedriver"
   else:
-    version_main = get_chrome_major_version()
+    use_version_main = get_chrome_major_version()
     # Fix for Chrome 115
     # https://github.com/seleniumbase/SeleniumBase/pull/1967
-    if int(version_main) > 114:
-      version_main = 114
+    if int(use_version_main) > 114:
+      use_version_main = 114
     if PATCHED_DRIVER_PATH is not None:
       driver_exe_path = PATCHED_DRIVER_PATH
 
@@ -174,7 +174,7 @@ def get_webdriver(proxy: dict = None) -> WebDriver:
     options = options,
     browser_executable_path = browser_executable_path,
     driver_executable_path = driver_exe_path,
-    version_main = version_main,
+    version_main = use_version_main,
     windows_headless = windows_headless,
     headless = windows_headless,
     patch_driver = (PATCHED_DRIVER_PATH is None or driver_exe_path != PATCHED_DRIVER_PATH))
