@@ -39,6 +39,29 @@ class CookieStorage(object):
         ret.append(cookie)
     return ret
 
+  def fetch_iframes_for_cookies_(self, driver, depth = 0):
+    iframes = driver.find_elements_by_xpath("//iframe")
+    for index, iframe in enumerate(iframes):
+      # Your sweet business logic applied to iframe goes here.
+      driver.switch_to.frame(index)
+      print(" " * (depth + 1) + "Process frame #" + str(index) + " with url = " + driver.current_url)
+      merge_cookies = driver.get_cookies()
+      self.merge_url_cookies(driver.current_url, merge_cookies)
+      self.fetch_iframes_for_cookies_(driver, depth = depth + 1)
+      driver.switch_to.parent_frame()
+
+  def merge_driver_cookies(self, driver):
+    cur_window = driver.current_window_handle
+    # choosen frame will not be reverted
+    pages = driver.window_handles
+    for page in pages :
+      driver.switch_to.window(page)
+      print("merge_driver_cookies: Process window with url = " + driver.current_url)
+      merge_cookies = driver.get_cookies()
+      self.merge_url_cookies(driver.current_url, merge_cookies, depth = 0)
+      self.fetch_iframes_for_cookies_(driver)
+    driver.switch_to.window(cur_window)
+
 """
 if __name__ == "__main__":
   cookie_storage = CookieStorage()
