@@ -1,4 +1,6 @@
 from urllib.parse import urlparse
+from selenium.webdriver.common.by import By
+import selenium.common.exceptions
 
 class CookieStorage(object):
   cookies_ : dict = {}
@@ -40,15 +42,22 @@ class CookieStorage(object):
     return ret
 
   def fetch_iframes_for_cookies_(self, driver, depth = 0):
-    iframes = driver.find_elements_by_xpath("//iframe")
+    iframes = driver.find_elements(by = By.XPATH, value = "//iframe")
     for index, iframe in enumerate(iframes):
       # Your sweet business logic applied to iframe goes here.
-      driver.switch_to.frame(index)
-      print(" " * (depth + 1) + "Process frame #" + str(index) + " with url = " + driver.current_url)
-      merge_cookies = driver.get_cookies()
-      self.merge_url_cookies(driver.current_url, merge_cookies)
-      self.fetch_iframes_for_cookies_(driver, depth = depth + 1)
-      driver.switch_to.parent_frame()
+      try :
+        driver.switch_to.frame(iframe)
+        current_url = driver.execute_script("return window.location.href;")
+        #print(" " * (depth + 1) + "Process frame #" + str(index) + " with url = " + current_url)
+        merge_cookies = driver.get_cookies()
+        self.merge_url_cookies(current_url, merge_cookies)
+        self.fetch_iframes_for_cookies_(driver, depth = depth + 1)
+        driver.switch_to.parent_frame()
+      except selenium.common.exceptions.StaleElementReferenceException :
+        pass
+      except Exception as e :
+        print("CookieStorage.fetch_iframes_for_cookies_: exception = " + str(e))
+        pass
 
   def merge_driver_cookies(self, driver):
     cur_window = driver.current_window_handle
@@ -56,7 +65,7 @@ class CookieStorage(object):
     pages = driver.window_handles
     for page in pages :
       driver.switch_to.window(page)
-      print("merge_driver_cookies: Process window with url = " + driver.current_url)
+      #print("merge_driver_cookies: Process window with url = " + driver.current_url)
       merge_cookies = driver.get_cookies()
       self.merge_url_cookies(driver.current_url, merge_cookies)
       self.fetch_iframes_for_cookies_(driver, depth = 0)
