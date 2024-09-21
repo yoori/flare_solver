@@ -58,8 +58,8 @@ class CookieStorage(object):
       driver.switch_to.window(page)
       print("merge_driver_cookies: Process window with url = " + driver.current_url)
       merge_cookies = driver.get_cookies()
-      self.merge_url_cookies(driver.current_url, merge_cookies, depth = 0)
-      self.fetch_iframes_for_cookies_(driver)
+      self.merge_url_cookies(driver.current_url, merge_cookies)
+      self.fetch_iframes_for_cookies_(driver, depth = 0)
     driver.switch_to.window(cur_window)
 
 """
