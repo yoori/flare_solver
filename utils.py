@@ -133,6 +133,8 @@ def get_webdriver(proxy: dict = None, version_main = None, user_data_dir = None)
   # https://peter.sh/experiments/chromium-command-line-switches/#use-gl
   options.add_argument('--use-gl=angle')
   options.add_argument('--use-angle=swiftshader')
+  options.add_argument('--disable-crashpad-for-testing')
+  options.add_argument('--single-process')
 
   proxy_extension_dir = None
   if proxy and all(key in proxy for key in ['url', 'username', 'password']):
