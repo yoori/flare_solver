@@ -108,7 +108,7 @@ def create_proxy_extension(proxy: dict) -> str:
 
   return proxy_extension_dir
 
-def get_webdriver(proxy: dict = None, version_main = None) -> WebDriver:
+def get_webdriver(proxy: dict = None, version_main = None, user_data_dir = None) -> WebDriver:
   global PATCHED_DRIVER_PATH
   logging.debug('Launching web browser...')
 
@@ -179,7 +179,9 @@ def get_webdriver(proxy: dict = None, version_main = None) -> WebDriver:
     version_main = use_version_main,
     windows_headless = windows_headless,
     headless = windows_headless,
-    patch_driver = (PATCHED_DRIVER_PATH is None or driver_exe_path != PATCHED_DRIVER_PATH))
+    patch_driver = (PATCHED_DRIVER_PATH is None or driver_exe_path != PATCHED_DRIVER_PATH),
+    user_data_dir = user_data_dir
+    )
 
   # save the patched driver to avoid re-downloads
   if driver_exe_path is None:
