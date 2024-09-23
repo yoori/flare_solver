@@ -12,14 +12,16 @@ def unpack_user_folders(target_folder, buf_str):
 def pack_user_folders(user_data_folder):
   new_buffer = BytesIO()
   with tarfile.open(fileobj = new_buffer, mode = 'w|gz') as new_tar:
-    for check_folder in [ 'Default/Cookies', 'Default/Local Storage', 'Default/SharedStorage', 'Default/SharedStorage-wal', 'Default/WebStorage' ] :
+    for check_folder in [ 'Default/Cookies', 'Default/Cookies-journal', 'Default/Local Storage',
+      'Default/SharedStorage', 'Default/SharedStorage-wal', 'Default/WebStorage' ] :
       source_dir = os.path.join(user_data_folder, check_folder)
-      if os.path.isdir(source_dir) :
+      if os.path.exists(source_dir) :
         new_tar.add(name = source_dir, arcname = check_folder)
   return base64.b64encode(new_buffer.getvalue()).decode('ascii')
 
 def remove_user_folders(user_data_folder):
-  for check_folder in [ 'Default/Cookies', 'Default/Local Storage', 'Default/SharedStorage', 'Default/SharedStorage-wal', 'Default/WebStorage' ] :
+  for check_folder in [ 'Default/Cookies', 'Default/Cookies-journal', 'Default/Local Storage',
+    'Default/SharedStorage', 'Default/SharedStorage-wal', 'Default/WebStorage' ] :
     remove_dir = os.path.join(user_data_folder, check_folder)
     shutil.rmtree(remove_dir, ignore_errors = True)
 
