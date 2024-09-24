@@ -135,6 +135,9 @@ def get_webdriver(proxy: dict = None, version_main = None, user_data_dir = None)
   options.add_argument('--use-angle=swiftshader')
   options.add_argument('--disable-crashpad-for-testing')
   options.add_argument('--single-process')
+  # disable animation
+  options.add_argument('--wm-window-animations-disabled')
+  options.add_argument('--animation-duration-scale=0')
 
   proxy_extension_dir = None
   if proxy and all(key in proxy for key in ['url', 'username', 'password']):
