@@ -108,7 +108,7 @@ def create_proxy_extension(proxy: dict) -> str:
 
   return proxy_extension_dir
 
-def get_webdriver(proxy: dict = None, version_main = None, user_data_dir = None) -> WebDriver:
+def get_webdriver(proxy: dict = None, version_main = None, user_data_dir = None, language = None) -> WebDriver:
   global PATCHED_DRIVER_PATH
   logging.debug('Launching web browser...')
 
@@ -138,6 +138,9 @@ def get_webdriver(proxy: dict = None, version_main = None, user_data_dir = None)
   # disable animation
   #options.add_argument('--wm-window-animations-disabled')
   #options.add_argument('--animation-duration-scale=0')
+
+  if language :
+    options.add_argument("--lang=" + str(language))
 
   proxy_extension_dir = None
   if proxy and all(key in proxy for key in ['url', 'username', 'password']):

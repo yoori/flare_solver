@@ -73,7 +73,7 @@ install_gost() {
     echo "Installing gost..."
     tar -xzf gost.tar.gz
     chmod +x gost
-    mv gost /usr/local/bin/gost
+    mv gost /usr/local/bin/gost || ( echo "gost not found after install" >&2 ; exit 1 ; )
 
     echo "gost installation completed!"
 }
