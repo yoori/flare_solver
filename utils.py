@@ -5,6 +5,7 @@ import re
 import shutil
 import urllib.parse
 import tempfile
+import certifi
 
 from selenium.webdriver.chrome.webdriver import WebDriver
 import undetected_chromedriver as uc
@@ -109,6 +110,12 @@ def create_proxy_extension(proxy: dict) -> str:
   return proxy_extension_dir
 
 def get_webdriver(proxy: dict = None, version_main = None, user_data_dir = None, language = None) -> WebDriver:
+  # fix ssl certificates for compiled binaries
+  # https://github.com/pyinstaller/pyinstaller/issues/7229
+  # https://stackoverflow.com/questions/55736855/how-to-change-the-cafile-argument-in-the-ssl-module-in-python3
+  os.environ["REQUESTS_CA_BUNDLE"] = certifi.where()
+  os.environ["SSL_CERT_FILE"] = certifi.where()
+
   global PATCHED_DRIVER_PATH
   logging.debug('Launching web browser...')
 
@@ -123,7 +130,10 @@ def get_webdriver(proxy: dict = None, version_main = None, user_data_dir = None,
   options.add_argument('--no-zygote')
   # attempt to fix Docker ARM32 build
   options.add_argument('--disable-gpu-sandbox')
+  options.add_argument('--disable-gpu-watchdog')
+  options.add_argument('--disable-gpu-compositing')
   options.add_argument('--disable-software-rasterizer')
+
   options.add_argument('--ignore-certificate-errors')
   options.add_argument('--ignore-ssl-errors')
   options.add_argument('--ignore-urlfetcher-cert-requests')
