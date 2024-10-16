@@ -239,48 +239,47 @@ class Solver(object) :
 
     self.save_screenshot('after_challenge_check')
 
-    if challenge_found:
+    if not challenge_found :
+      self.save_screenshot('no_challenge_found')
+      logging.info("Challenge not detected!")
+      res.message = "Challenge not detected!"
+    else : # first challenge found
       logging.info("Challenge detected, to solve it")
 
       attempt = 0
 
       while True:
         Solver._check_timeout(req, start_time, "challenge loading wait")
-        logging.info("Wait challenge loading, attempt #" + str(attempt))
-        # Get screenshot of full page (all elements is in shadowroot)
+        logging.info("Challenge step #" + str(attempt))
+
+        # check that challenge present (wait when it will disappear after click)
+        challenge_found = self._check_challenge(driver)
+        if not challenge_found :
+          logging.info("Challenge disappeared on step #" + str(attempt))
+          break
+
+        # check that need to click,
+        # get screenshot of full page (all elements is in shadowroot)
+        # clicking can be required few times.
         iframe_image = self._get_screenshot(driver)
         click_coord = Solver._get_flare_click_point(iframe_image)
         if click_coord :
-          logging.info("Click by coords: " + str(click_coord[0]) + ", " + str(click_coord[1]))
+          # recheck that challenge present - we can be already redirected and
+          # need to exclude click on result page
+          challenge_found = self._check_challenge(driver)
+          if not challenge_found :
+            logging.info("Challenge disappeared on step #" + str(attempt))
+            break
+          logging.info("Click challenge by coords: " + str(click_coord[0]) + ", " + str(click_coord[1]))
           Solver._click_verify(driver, click_coord)
-          break
+          res.message = "Challenge solved!" #< challenge found and solved once (as minimum)
+          self.save_screenshot('after_verify_click')
+
         attempt = attempt + 1
         time.sleep(_SHORT_TIMEOUT)
 
-      self.save_screenshot('after_verify_click')
-
-      # waits until cloudflare redirection ends (title will disappear)
-      logging.info("Waiting for redirect")
-
-      attempt = 0
-
-      while True :
-        Solver._check_timeout(req, start_time, "redirect wait")
-        self.save_screenshot('redirect_wait')
-        logging.info("Wait redirect, attempt #" + str(attempt))
-        challenge_found = self._check_challenge(driver)
-        if not challenge_found :
-          break
-        attempt = attempt + 1
-        time.sleep(_SHORT_TIMEOUT)
-
-      self.save_screenshot('after_redirect_wait')
-      logging.info("Challenge solved!")
-      res.message = "Challenge solved!"
-    else:
-      self.save_screenshot('no_challenge_found')
-      logging.info("Challenge not detected!")
-      res.message = "Challenge not detected!"
+      logging.info("Challenge solving finished")
+      self.save_screenshot('solving_finish')
 
     res.url = driver.current_url
     res.cookies = driver.get_cookies()
