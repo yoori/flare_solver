@@ -176,9 +176,9 @@ class Solver(object) :
     try:
       actions = ActionChains(driver)
       actions.move_by_offset(click_coord[0], click_coord[1]).click().perform()
-      logging.debug("Cloudflare verify checkbox found and clicked!")
-    except Exception:
-      logging.debug("Cloudflare verify checkbox not found on the page.")
+      logging.info("Cloudflare verify checkbox found and clicked!")
+    except Exception as e :
+      logging.error("Cloudflare verify checkbox click error: " + str(e))
 
   @staticmethod
   def _check_timeout(req: SolverRequest, start_time: datetime.datetime, step_name: str):
