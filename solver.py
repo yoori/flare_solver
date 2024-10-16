@@ -258,6 +258,8 @@ class Solver(object) :
         Solver._check_timeout(req, start_time, "challenge loading wait")
         logging.info("Challenge step #" + str(attempt))
 
+        self.save_screenshot('attempt')
+
         # check that challenge present (wait when it will disappear after click)
         challenge_found = self._check_challenge(driver)
         if not challenge_found :
@@ -279,6 +281,7 @@ class Solver(object) :
             break
           logging.info("Click challenge by coords: " + str(click_coord[0]) + ", " + str(click_coord[1]))
           Solver._click_verify(driver, click_coord)
+          time.sleep(_SHORT_TIMEOUT)
           res.message = "Challenge solved!" #< challenge found and solved once (as minimum)
           self.save_screenshot('after_verify_click')
 
