@@ -176,7 +176,7 @@ class Solver(object) :
         else :
           res = self._evil_logic(req, driver, start_time)
 
-        print("RES0: " + str(res), flush = True)
+        print("RES1: " + str(res), flush = True)
         return res
 
       except FunctionTimedOut as e :
@@ -332,6 +332,7 @@ class Solver(object) :
     self.save_screenshot('finish')
     logging.info('Solving finished')
 
+    print("RES0: " + str(res), flush = True)
     return res
 
   def _get_screenshot(self, driver) :
