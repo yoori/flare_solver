@@ -287,7 +287,13 @@ class Solver(object) :
       logging.info("Challenge detected, to solve it")
 
       # Make primary mouse moving
-      move_element = driver.find_element(By.XPATH, "//body/div/div/div[0]")
+      move_element = None
+      try :
+        move_element = driver.find_element(By.XPATH, "//body/div/div[0]")
+      except :
+        logging.info("No element for primary mouse move")
+        pass
+
       if move_element :
         left = int(move_element.location['x'])
         top = int(move_element.location['y'])
