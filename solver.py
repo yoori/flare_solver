@@ -94,6 +94,7 @@ Solver
 class Solver(object) :
   _proxy : str = None
   _driver : WebDriver = None
+  _last_click_coordinates = None
   _screenshot_i : int = 0
   _debug : bool = True
 
@@ -171,12 +172,22 @@ class Solver(object) :
         driver.quit()
         logging.debug('A used instance of webdriver has been destroyed')
 
-  @staticmethod
-  def _click_verify(driver: WebDriver, click_coord):
+  def _click_verify(self, driver: WebDriver, click_coord):
     try:
+      #Solver._click_on_coordinates(driver, click_coord[0], click_coord[1])
+
+      if self._last_click_coordinates is None :
+        move_offset = click_coord
+      else :
+        move_offset = [
+          click_coord[0] - self._last_click_coordinates[0],
+          click_coord[1] - self._last_click_coordinates[1]
+        ]
+      html_element = driver.find_element(By.TAG_NAME, "html")
       actions = ActionChains(driver)
-      actions.move_by_offset(click_coord[0], click_coord[1]).click().perform()
+      actions.move_by_offset(move_offset[0], move_offset[1]).click().perform()
       logging.info("Cloudflare verify checkbox found and clicked!")
+      self._last_click_coordinates = click_coord
     except Exception as e :
       logging.error("Cloudflare verify checkbox click error: " + str(e))
 
@@ -289,7 +300,7 @@ class Solver(object) :
 
           html_element = driver.find_element(By.TAG_NAME, "html")
           logging.info("Click challenge by coords: " + str(click_coord[0]) + ", " + str(click_coord[1]))
-          Solver._click_verify(driver, click_coord)
+          self._click_verify(driver, click_coord)
 
           # wait html disappearing (without that we can repeat click on equal checkbox)
           try:
