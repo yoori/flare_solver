@@ -136,20 +136,30 @@ class Solver(object) :
     logging.info("Solve result: " + str(res))
     return res
 
+  def _eval_mouse_move_offset(self, target_coord):
+    if self._cursor_position is None :
+      return target_coord
+    return [
+      target_coord[0] - self._cursor_position[0],
+      target_coord[1] - self._cursor_position[1]
+      ]
+
+  def mouse_move(self, driver: WebDriver, move_coord):
+    try:
+      move_offset = self._eval_mouse_move_offset(move_coord)
+      actions = ActionChains(driver)
+      actions.move_by_offset(move_offset[0], move_offset[1]).perform()
+      self._cursor_position = move_coord
+    except Exception as e :
+      logging.error("Cloudflare verify checkbox click error: " + str(e))
+
   def click(self, driver: WebDriver, click_coord):
     try:
-      if self._last_click_coordinates is None :
-        move_offset = click_coord
-      else :
-        move_offset = [
-          click_coord[0] - self._last_click_coordinates[0],
-          click_coord[1] - self._last_click_coordinates[1]
-        ]
-      html_element = driver.find_element(By.TAG_NAME, "html")
+      move_offset = self._eval_mouse_move_offset(click_coord)
       actions = ActionChains(driver)
       actions.move_by_offset(move_offset[0], move_offset[1]).click().perform()
       logging.info("Cloudflare verify checkbox found and clicked!")
-      self._last_click_coordinates = click_coord
+      self._cursor_position = click_coord
     except Exception as e :
       logging.error("Cloudflare verify checkbox click error: " + str(e))
 
@@ -275,6 +285,17 @@ class Solver(object) :
       res.message = "Challenge not detected!"
     else : # first challenge found
       logging.info("Challenge detected, to solve it")
+
+      # Make primary mouse moving
+      move_element = driver.find_element(By.XPATH, "//body/div/div/div[0]")
+      if move_element :
+        left = int(move_element.location['x'])
+        top = int(move_element.location['y'])
+        width = int(move_element.size['width'])
+        height = int(move_element.size['height'])
+        coord = [random.randint(left + 2, left + width - 2), random.randint(top + 2, top + height - 2)]
+        logging.info("Do primary mouse move to [" + str(coord[0]) + ", " + str(coord[1]) + "]")
+        self.mouse_move(driver, coord)
 
       attempt = 0
 
@@ -409,14 +430,21 @@ class Solver(object) :
 
     # Now we should find two rect contours (one inside other) with ratio 1-5%, (now I see : 0.0213)
     if len(rect_contours) > 1:
-      area1 = rect_contours[0][0]
-      for check_c in rect_contours[1:] :
-        area2 = check_c[0]
-        area_ratio = area1 / area2
-        if area_ratio > 0.01 and area_ratio < 0.05 :
-          # Found !
-          x, y, w, h = cv2.boundingRect(rect_contours[0][1])
-          return [random.randint(x + 2, x + w - 2), random.randint(y + 2, y + h - 2)]
+      for area1_index in range(len(rect_contours)) :
+        area1 = rect_contours[area1_index][0]
+        for check_c in rect_contours[area1_index + 1:] :
+          area2 = check_c[0]
+          area_ratio = area1 / area2
+          # Check area ratio and that area1 inside area2
+          if area_ratio > 0.01 and area_ratio < 0.05 :
+            # Found !
+            c1_x, c1_y, c1_w, c1_h = cv2.boundingRect(rect_contours[area1_index][1])
+            c2_x, c2_y, c2_w, c2_h = cv2.boundingRect(check_c[1])
+            if c1_x >= c2_x and c1_x <= c2_x + c2_w and c1_y >= c2_y and c1_y <= c2_y + c2_h :
+              #print("A1: x = " + str(x) + ", y = " + str(y) + ", w = " + str(w) + ", h = " + str(h))
+              x2, y2, w2, h2 = cv2.boundingRect(check_c[1])
+              #print("A2: x = " + str(x2) + ", y = " + str(y2) + ", w = " + str(w2) + ", h = " + str(h2))
+              return [random.randint(c1_x + 2, c1_x + c1_w - 2), random.randint(c1_y + 2, c1_y + c1_h - 2)]
 
     return None
 
