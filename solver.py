@@ -124,7 +124,7 @@ class Solver(object) :
 
   # Method that can overriden and process specific commands
   # It can return specific Response object (with additional fields for example)
-  def process_command(self, res: SolverResponse, req: SolverRequest, driver: WebDriver):
+  def process_command(self, res: SolverResponse, req: SolverRequest, driver: WebDriver) -> SolverResponse:
     return res
 
   def solve(self, req: SolverRequest) -> SolverResponse:
@@ -173,6 +173,7 @@ class Solver(object) :
 
         if req.maxTimeout is not None :
           res = func_timeout(req.maxTimeout, Solver._evil_logic, (self, req, driver, start_time))
+          print("func_timeout RES: " + str(res), flush = True)
         else :
           res = self._evil_logic(req, driver, start_time)
 
