@@ -70,7 +70,7 @@ Request for process, can be extended and some custom fields used in process_comm
 class SolverRequest(object):
   url: str = None
   proxy: dict = None
-  maxTimeout: float = None # timeout in sec
+  maxTimeout: float = 60 # timeout in sec
   cookies: dict = None
 
   def __init__(self, _dict = None):
@@ -121,7 +121,6 @@ class Solver(object) :
     return self._resolve_challenge(req)
 
   def _resolve_challenge(self, req: SolverRequest) -> SolverResponse:
-    timeout = req.maxTimeout if req.maxTimeout else 60
     driver = None
     start_time = datetime.datetime.now()
     try:
@@ -135,13 +134,16 @@ class Solver(object) :
         )
         self._driver = driver
         logging.info('New instance of webdriver has been created to perform the request (proxy=' +
-          str(use_proxy) + '), timeout = ' + str(timeout))
+          str(use_proxy) + '), timeout = ' + str(req.maxTimeout))
         time.sleep(3) # Wait when driver will up
 
-        return func_timeout(timeout, Solver._evil_logic, (self, req, driver, start_time))
+        if req.maxTimeout is not None :
+          return func_timeout(req.maxTimeout, Solver._evil_logic, (self, req, driver, start_time))
+        else :
+          self._evil_logic(req, driver, start_time)
 
       except FunctionTimedOut as e :
-        error_message = f'Error solving the challenge. Timeout after {timeout} seconds. ' + str(e)
+        error_message = f'Error solving the challenge. Timeout after {req.maxTimeout} seconds. ' + str(e)
         logging.error(error_message)
         raise Exception(error_message)
       except Exception as e:
@@ -166,10 +168,11 @@ class Solver(object) :
 
   @staticmethod
   def _check_timeout(req: SolverRequest, start_time: datetime.datetime, step_name: str):
-    now = datetime.datetime.now()
-    wait_time_sec = (now - start_time).total_seconds()
-    if wait_time_sec > req.maxTimeout :
-      raise FunctionTimedOut("Timed out on " + step_name)
+    if req.maxTimeout is not None :
+      now = datetime.datetime.now()
+      wait_time_sec = (now - start_time).total_seconds()
+      if wait_time_sec > req.maxTimeout :
+        raise FunctionTimedOut("Timed out on " + step_name)
 
   def _evil_logic(self, req: SolverRequest, driver: WebDriver, start_time : datetime.datetime) -> SolverResponse:
     res = SolverResponse({})
