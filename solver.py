@@ -173,11 +173,13 @@ class Solver(object) :
 
         if req.maxTimeout is not None :
           res = func_timeout(req.maxTimeout, Solver._evil_logic, (self, req, driver, start_time))
-          print("func_timeout RES: " + str(res), flush = True)
+          # in some specific cases func_timeout can return None - it is bug,
+          # case : when called function exited after thread.join
+          if res is None :
+            raise FunctionTimedOut("")
         else :
           res = self._evil_logic(req, driver, start_time)
 
-        print("RES2: " + str(res), flush = True)
         return res
 
       except FunctionTimedOut as e :
@@ -327,15 +329,11 @@ class Solver(object) :
     res.userAgent = flare_solver.utils.get_user_agent(driver)
     logging.info("User-Agent got")
 
-    print("RES0: " + str(res), flush = True)
-
     # Process specific command
     res = self.process_command(res, req, driver)
 
     self.save_screenshot('finish')
     logging.info('Solving finished')
-
-    print("RES1: " + str(res), flush = True)
 
     return res
 
