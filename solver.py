@@ -134,6 +134,23 @@ class Solver(object) :
 
     return self._resolve_challenge(req)
 
+  def click(self, driver: WebDriver, click_coord):
+    try:
+      if self._last_click_coordinates is None :
+        move_offset = click_coord
+      else :
+        move_offset = [
+          click_coord[0] - self._last_click_coordinates[0],
+          click_coord[1] - self._last_click_coordinates[1]
+        ]
+      html_element = driver.find_element(By.TAG_NAME, "html")
+      actions = ActionChains(driver)
+      actions.move_by_offset(move_offset[0], move_offset[1]).click().perform()
+      logging.info("Cloudflare verify checkbox found and clicked!")
+      self._last_click_coordinates = click_coord
+    except Exception as e :
+      logging.error("Cloudflare verify checkbox click error: " + str(e))
+
   def _resolve_challenge(self, req: SolverRequest) -> SolverResponse:
     driver = None
     start_time = datetime.datetime.now()
@@ -171,25 +188,6 @@ class Solver(object) :
       if driver is not None:
         driver.quit()
         logging.debug('A used instance of webdriver has been destroyed')
-
-  def _click_verify(self, driver: WebDriver, click_coord):
-    try:
-      #Solver._click_on_coordinates(driver, click_coord[0], click_coord[1])
-
-      if self._last_click_coordinates is None :
-        move_offset = click_coord
-      else :
-        move_offset = [
-          click_coord[0] - self._last_click_coordinates[0],
-          click_coord[1] - self._last_click_coordinates[1]
-        ]
-      html_element = driver.find_element(By.TAG_NAME, "html")
-      actions = ActionChains(driver)
-      actions.move_by_offset(move_offset[0], move_offset[1]).click().perform()
-      logging.info("Cloudflare verify checkbox found and clicked!")
-      self._last_click_coordinates = click_coord
-    except Exception as e :
-      logging.error("Cloudflare verify checkbox click error: " + str(e))
 
   @staticmethod
   def _check_timeout(req: SolverRequest, start_time: datetime.datetime, step_name: str):
@@ -300,7 +298,7 @@ class Solver(object) :
 
           html_element = driver.find_element(By.TAG_NAME, "html")
           logging.info("Click challenge by coords: " + str(click_coord[0]) + ", " + str(click_coord[1]))
-          self._click_verify(driver, click_coord)
+          self.click(driver, click_coord)
 
           # wait html disappearing (without that we can repeat click on equal checkbox)
           try:
