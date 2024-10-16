@@ -101,14 +101,21 @@ class Solver(object) :
     self._proxy = proxy
     self._driver = None
 
-  def save_screenshot(self, step_name, image = None) :
+  def save_screenshot(self, step_name, image = None, mark_coords = None) :
     if self._debug :
       screenshot_file_without_ext = str(self._screenshot_i) + '_' + step_name
       logging.info("Screenshot saved to '" + screenshot_file_without_ext + "'")
+
       if image is not None :
         cv2.imwrite(screenshot_file_without_ext + ".png", image)
       else :
         self._driver.save_screenshot(screenshot_file_without_ext + ".png")
+
+      if mark_coords :
+        image = cv2.imread(screenshot_file_without_ext + ".png")
+        image = cv2.circle(image, mark_coords, 5, (255, 0, 0), 2)
+        cv2.imwrite(screenshot_file_without_ext + "_mark.png", image)
+
       dom = self._driver.execute_script("return new XMLSerializer().serializeToString(document);")
       with open(screenshot_file_without_ext + '.html', 'w') as fp:
         fp.write(dom)
@@ -272,7 +279,7 @@ class Solver(object) :
         page_image = self._get_screenshot(driver)
         click_coord = Solver._get_flare_click_point(page_image)
         if click_coord :
-          self.save_screenshot('to_verify_click', image = page_image)
+          self.save_screenshot('to_verify_click', image = page_image, mark_coords = click_coord)
           # recheck that challenge present - we can be already redirected and
           # need to exclude click on result page
           challenge_found = self._check_challenge(driver)
