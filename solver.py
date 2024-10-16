@@ -132,7 +132,9 @@ class Solver(object) :
     if req.url is None:
       raise Exception("Request parameter 'url' is mandatory in 'request.get' command.")
 
-    return self._resolve_challenge(req)
+    res = self._resolve_challenge(req)
+    logging.info("Solve result: " + str(res))
+    return res
 
   def click(self, driver: WebDriver, click_coord):
     try:
