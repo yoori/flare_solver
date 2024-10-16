@@ -141,7 +141,7 @@ class Solver(object) :
         if req.maxTimeout is not None :
           return func_timeout(req.maxTimeout, Solver._evil_logic, (self, req, driver, start_time))
         else :
-          self._evil_logic(req, driver, start_time)
+          return self._evil_logic(req, driver, start_time)
 
       except FunctionTimedOut as e :
         error_message = f'Error solving the challenge. Timeout after {req.maxTimeout} seconds. ' + str(e)
@@ -266,6 +266,7 @@ class Solver(object) :
 
       while True :
         Solver._check_timeout(req, start_time, "redirect wait")
+        self.save_screenshot('redirect_wait')
         logging.info("Wait redirect, attempt #" + str(attempt))
         challenge_found = self._check_challenge(driver)
         if not challenge_found :
