@@ -279,9 +279,17 @@ class Solver(object) :
           if not challenge_found :
             logging.info("Challenge disappeared on step #" + str(attempt))
             break
+
+          html_element = driver.find_element(By.TAG_NAME, "html")
           logging.info("Click challenge by coords: " + str(click_coord[0]) + ", " + str(click_coord[1]))
           Solver._click_verify(driver, click_coord)
-          time.sleep(_SHORT_TIMEOUT)
+
+          # wait html disappearing (without that we can repeat click on equal checkbox)
+          try:
+            WebDriverWait(driver, _REDIRECT_WAIT_TIMEOUT).until(staleness_of(html_element))
+          except Exception:
+            logging.info("Timeout waiting for redirect")
+
           res.message = "Challenge solved!" #< challenge found and solved once (as minimum)
           self.save_screenshot('after_verify_click')
 
