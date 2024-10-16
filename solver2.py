@@ -243,7 +243,9 @@ class Solver(object) :
       driver.switch_to.frame(iframe)
       iframe_body = driver.find_element(By.CSS_SELECTOR, "body")
       if iframe_body:
+        logging.info("To iframe click ...")
         iframe_body.click()
+        logging.info("To checkbox click ...")
         actions = ActionChains(driver)
         actions.move_to_element_with_offset(iframe_body, 10, 10)
         actions.click(iframe_body)
