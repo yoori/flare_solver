@@ -94,7 +94,7 @@ Solver
 class Solver(object) :
   _proxy : str = None
   _driver : WebDriver = None
-  _last_click_coordinates = None
+  _cursor_position = None
   _screenshot_i : int = 0
   _debug : bool = True
 
