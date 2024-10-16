@@ -176,7 +176,7 @@ class Solver(object) :
         else :
           res = self._evil_logic(req, driver, start_time)
 
-        print("RES1: " + str(res), flush = True)
+        print("RES2: " + str(res), flush = True)
         return res
 
       except FunctionTimedOut as e :
@@ -326,13 +326,16 @@ class Solver(object) :
     res.userAgent = flare_solver.utils.get_user_agent(driver)
     logging.info("User-Agent got")
 
+    print("RES0: " + str(res), flush = True)
+
     # Process specific command
     res = self.process_command(res, req, driver)
 
     self.save_screenshot('finish')
     logging.info('Solving finished')
 
-    print("RES0: " + str(res), flush = True)
+    print("RES1: " + str(res), flush = True)
+
     return res
 
   def _get_screenshot(self, driver) :
