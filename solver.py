@@ -105,7 +105,7 @@ class Solver(object) :
     if self._debug :
       screenshot_file_without_ext = str(self._screenshot_i) + '_' + step_name
       logging.info("Screenshot saved to '" + screenshot_file_without_ext + "'")
-      if image :
+      if image is not None :
         cv2.imwrite(screenshot_file_without_ext + ".png", image)
       else :
         self._driver.save_screenshot(screenshot_file_without_ext + ".png")
