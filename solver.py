@@ -172,9 +172,12 @@ class Solver(object) :
         # TODO : wait driver by ping
 
         if req.maxTimeout is not None :
-          return func_timeout(req.maxTimeout, Solver._evil_logic, (self, req, driver, start_time))
+          res = func_timeout(req.maxTimeout, Solver._evil_logic, (self, req, driver, start_time))
         else :
-          return self._evil_logic(req, driver, start_time)
+          res = self._evil_logic(req, driver, start_time)
+
+        print("RES0: " + str(res), flush = True)
+        return res
 
       except FunctionTimedOut as e :
         error_message = f'Error solving the challenge. Timeout after {req.maxTimeout} seconds. ' + str(e)
