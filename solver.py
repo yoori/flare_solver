@@ -92,24 +92,27 @@ class SolverResponse:
 Solver
 """
 class Solver(object) :
-  _proxy = None
-  _driver = None
-  _screenshot_i = 0
+  _proxy : str = None
+  _driver : WebDriver = None
+  _screenshot_i : int = 0
+  _debug : bool = True
 
   def __init__(self, proxy = None) :
     self._proxy = proxy
     self._driver = None
 
   def save_screenshot(self, step_name, image = None) :
-    screenshot_file_without_ext = str(self._screenshot_i) + '_' + step_name
-    if image :
-      cv2.imwrite(screenshot_file_without_ext + ".png", image)
-    else :
-      self._driver.save_screenshot(screenshot_file_without_ext + ".png")
-    dom = self._driver.execute_script("return new XMLSerializer().serializeToString(document);")
-    with open(screenshot_file_without_ext + '.html', 'w') as fp:
-      fp.write(dom)
-    self._screenshot_i += 1
+    if self._debug :
+      screenshot_file_without_ext = str(self._screenshot_i) + '_' + step_name
+      logging.info("Screenshot saved to '" + screenshot_file_without_ext + "'")
+      if image :
+        cv2.imwrite(screenshot_file_without_ext + ".png", image)
+      else :
+        self._driver.save_screenshot(screenshot_file_without_ext + ".png")
+      dom = self._driver.execute_script("return new XMLSerializer().serializeToString(document);")
+      with open(screenshot_file_without_ext + '.html', 'w') as fp:
+        fp.write(dom)
+      self._screenshot_i += 1
 
   # Method that can overriden and process specific commands
   # It can return specific Response object (with additional fields for example)
