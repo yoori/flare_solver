@@ -136,6 +136,7 @@ class Solver(object) :
         logging.info('New instance of webdriver has been created to perform the request (proxy=' +
           str(use_proxy) + '), timeout = ' + str(req.maxTimeout))
         time.sleep(3) # Wait when driver will up
+        # TODO : wait driver by ping
 
         if req.maxTimeout is not None :
           return func_timeout(req.maxTimeout, Solver._evil_logic, (self, req, driver, start_time))
@@ -174,29 +175,7 @@ class Solver(object) :
       if wait_time_sec > req.maxTimeout :
         raise FunctionTimedOut("Timed out on " + step_name)
 
-  def _evil_logic(self, req: SolverRequest, driver: WebDriver, start_time : datetime.datetime) -> SolverResponse:
-    res = SolverResponse({})
-
-    # navigate to the page
-    logging.debug(f'Navigating to... {req.url}')
-    driver.get(req.url)
-    driver.start_session()  # required to bypass Cloudflare
-
-    self.save_screenshot('evil_logic')
-
-    # set cookies if required
-    if req.cookies is not None and len(req.cookies) > 0:
-      logging.debug(f'Setting cookies...')
-      for cookie in req.cookies:
-        driver.delete_cookie(cookie['name'])
-        driver.add_cookie(cookie)
-      # reload the page
-      driver.get(req.url)
-      driver.start_session()  # required to bypass Cloudflare
-
-    # wait for the page
-    if flare_solver.utils.get_config_log_html():
-      logging.debug(f"Response HTML:\n{driver.page_source}")
+  def _check_challenge(self, driver: WebDriver) :
     page_title = driver.title
 
     # find access denied titles
@@ -229,12 +208,40 @@ class Solver(object) :
           logging.info("Challenge detected. Selector found: " + selector)
           break
 
+    return challenge_found
+
+  def _evil_logic(self, req: SolverRequest, driver: WebDriver, start_time : datetime.datetime) -> SolverResponse:
+    res = SolverResponse({})
+
+    # navigate to the page
+    logging.debug(f'Navigating to... {req.url}')
+    driver.get(req.url)
+    driver.start_session()  # required to bypass Cloudflare
+
+    self.save_screenshot('evil_logic')
+
+    # set cookies if required
+    if req.cookies is not None and len(req.cookies) > 0:
+      logging.debug(f'Setting cookies...')
+      for cookie in req.cookies:
+        driver.delete_cookie(cookie['name'])
+        driver.add_cookie(cookie)
+      # reload the page
+      driver.get(req.url)
+      driver.start_session()  # required to bypass Cloudflare
+
+    # wait for the page
+    if flare_solver.utils.get_config_log_html():
+      logging.debug(f"Response HTML:\n{driver.page_source}")
+
+    # find challenge by title
+    challenge_found = self._check_challenge(driver)
+
     self.save_screenshot('after_challenge_check')
 
     if challenge_found:
       logging.info("Challenge detected, to solve it")
 
-      html_element = None
       attempt = 0
 
       while True:
@@ -244,7 +251,6 @@ class Solver(object) :
         iframe_image = self._get_screenshot(driver)
         click_coord = Solver._get_flare_click_point(iframe_image)
         if click_coord :
-          html_element = driver.find_element(By.TAG_NAME, "html")
           logging.info("Click by coords: " + str(click_coord[0]) + ", " + str(click_coord[1]))
           Solver._click_verify(driver, click_coord)
           break
@@ -253,13 +259,19 @@ class Solver(object) :
 
       self.save_screenshot('after_verify_click')
 
-      # waits until cloudflare redirection ends
+      # waits until cloudflare redirection ends (title will disappear)
       logging.info("Waiting for redirect")
-      # noinspection PyBroadException
-      try:
-        WebDriverWait(driver, _REDIRECT_WAIT_TIMEOUT).until(staleness_of(html_element))
-      except Exception:
-        logging.info("Timeout waiting for redirect")
+
+      attempt = 0
+
+      while True :
+        Solver._check_timeout(req, start_time, "redirect wait")
+        logging.info("Wait redirect, attempt #" + str(attempt))
+        challenge_found = self._check_challenge(driver)
+        if not challenge_found :
+          break
+        attempt = attempt + 1
+        time.sleep(_SHORT_TIMEOUT)
 
       self.save_screenshot('after_redirect_wait')
       logging.info("Challenge solved!")
