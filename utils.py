@@ -305,15 +305,22 @@ def extract_version_nt_folder() -> str:
           return match.group(0)
   return ''
 
+def _get_user_agent(driver) -> str:
+  global USER_AGENT
+  USER_AGENT = driver.execute_script("return navigator.userAgent")
+  return USER_AGENT
+
 def get_user_agent(driver = None) -> str:
   global USER_AGENT
   if USER_AGENT is not None:
     return USER_AGENT
 
   try:
-    with (driver or get_webdriver()) as driver :
-      USER_AGENT = driver.execute_script("return navigator.userAgent")
-      return USER_AGENT
+    if driver :
+      return _get_user_agent(driver)
+    else :
+      with get_webdriver() as driver :
+        return _get_user_agent(driver)
   except Exception as e:
     raise Exception("Error getting browser User-Agent. " + str(e))
 
