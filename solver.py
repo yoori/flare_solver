@@ -252,20 +252,17 @@ class Solver(object) :
       logging.info("Challenge not detected!")
       res.message = "Challenge not detected!"
 
-    self.save_screenshot('evil_logic1')
     res.url = driver.current_url
     res.cookies = driver.get_cookies()
     logging.info("Cookies got")
-    self.save_screenshot('evil_logic2')
     res.userAgent = flare_solver.utils.get_user_agent(driver)
-    self.save_screenshot('evil_logic3')
     logging.info("User-Agent got")
 
     # Process specific command
     res = self.process_command(res, req, driver)
 
-    self.save_screenshot('evil_logic4')
-    logging.info('_evil_logic finished')
+    self.save_screenshot('finish')
+    logging.info('Solving finished')
 
     return res
 
