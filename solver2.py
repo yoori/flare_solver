@@ -238,7 +238,7 @@ class Solver(object) :
   @staticmethod
   def click_verify(driver: WebDriver):
     try:
-      logging.debug("Try to find the Cloudflare verify checkbox...")
+      logging.info("Try to find the Cloudflare verify checkbox...")
       iframe = Solver._get_shadowed_iframe(driver, "div:not(:has(div))")
       driver.switch_to.frame(iframe)
       iframe_body = driver.find_element(By.CSS_SELECTOR, "body")
@@ -248,26 +248,26 @@ class Solver(object) :
         actions.move_to_element_with_offset(iframe_body, 10, 10)
         actions.click(iframe_body)
         actions.perform()
-        logging.debug("Attempted to click on iframe body")
+        logging.info("Attempted to click on iframe body")
     except Exception as e:
-      logging.debug("Cloudflare verify checkbox not found on the page. %s", repr(e))
+      logging.info("Cloudflare verify checkbox not found on the page. %s", repr(e))
     finally:
       driver.switch_to.default_content()
 
     try:
-        logging.debug("Try to find the Cloudflare 'Verify you are human' button...")
-        button = driver.find_element(
-            by=By.XPATH,
-            value="//input[@type='button' and @value='Verify you are human']",
-        )
-        if button:
-            actions = ActionChains(driver)
-            actions.move_to_element_with_offset(button, 5, 7)
-            actions.click(button)
-            actions.perform()
-            logging.debug("The Cloudflare 'Verify you are human' button found and clicked!")
+      logging.info("Try to find the Cloudflare 'Verify you are human' button...")
+      button = driver.find_element(
+          by=By.XPATH,
+          value="//input[@type='button' and @value='Verify you are human']",
+      )
+      if button:
+        actions = ActionChains(driver)
+        actions.move_to_element_with_offset(button, 5, 7)
+        actions.click(button)
+        actions.perform()
+        logging.info("The Cloudflare 'Verify you are human' button found and clicked!")
     except Exception:
-        logging.debug("The Cloudflare 'Verify you are human' button not found on the page.")
+      logging.info("The Cloudflare 'Verify you are human' button not found on the page.")
 
     time.sleep(2)
 
