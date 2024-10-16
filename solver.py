@@ -100,9 +100,12 @@ class Solver(object) :
     self._proxy = proxy
     self._driver = None
 
-  def save_screenshot(self, step_name) :
+  def save_screenshot(self, step_name, image = None) :
     screenshot_file_without_ext = str(self._screenshot_i) + '_' + step_name
-    self._driver.save_screenshot(screenshot_file_without_ext + ".png")
+    if image :
+      cv2.imwrite(screenshot_file_without_ext + ".png", image)
+    else :
+      self._driver.save_screenshot(screenshot_file_without_ext + ".png")
     dom = self._driver.execute_script("return new XMLSerializer().serializeToString(document);")
     with open(screenshot_file_without_ext + '.html', 'w') as fp:
       fp.write(dom)
@@ -261,9 +264,10 @@ class Solver(object) :
         # check that need to click,
         # get screenshot of full page (all elements is in shadowroot)
         # clicking can be required few times.
-        iframe_image = self._get_screenshot(driver)
-        click_coord = Solver._get_flare_click_point(iframe_image)
+        page_image = self._get_screenshot(driver)
+        click_coord = Solver._get_flare_click_point(page_image)
         if click_coord :
+          self.save_screenshot('to_verify_click', image = page_image)
           # recheck that challenge present - we can be already redirected and
           # need to exclude click on result page
           challenge_found = self._check_challenge(driver)
