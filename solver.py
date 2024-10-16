@@ -9,6 +9,7 @@ import sys
 import functools
 import random
 import base64
+import datetime
 
 from datetime import timedelta
 from urllib.parse import unquote
@@ -122,6 +123,7 @@ class Solver(object) :
   def _resolve_challenge(self, req: SolverRequest) -> SolverResponse:
     timeout = req.maxTimeout if req.maxTimeout else 60
     driver = None
+    start_time = datetime.datetime.now()
     try:
       try:
         user_data_dir = os.environ.get('USER_DATA', None)
@@ -136,14 +138,16 @@ class Solver(object) :
           str(use_proxy) + '), timeout = ' + str(timeout))
         time.sleep(3) # Wait when driver will up
 
-        return func_timeout(timeout, Solver._evil_logic, (self, req, driver))
+        return func_timeout(timeout, Solver._evil_logic, (self, req, driver, start_time))
 
-      except FunctionTimedOut:
-        logging.error(f'Error solving the challenge. Timeout after {timeout} seconds.')
-        raise Exception(f'Error solving the challenge. Timeout after {timeout} seconds.')
+      except FunctionTimedOut as e :
+        error_message = f'Error solving the challenge. Timeout after {timeout} seconds. ' + str(e)
+        logging.error(error_message)
+        raise Exception(error_message)
       except Exception as e:
-        logging.error('Error solving the challenge. ' + str(e).replace('\n', '\\n'))
-        raise Exception('Error solving the challenge. ' + str(e).replace('\n', '\\n'))
+        error_message = 'Error solving the challenge. ' + str(e).replace('\n', '\\n')
+        logging.error(error_message)
+        raise Exception(error_message)
 
     finally:
       logging.info('Close webdriver')
@@ -160,7 +164,14 @@ class Solver(object) :
     except Exception:
       logging.debug("Cloudflare verify checkbox not found on the page.")
 
-  def _evil_logic(self, req: SolverRequest, driver: WebDriver) -> SolverResponse:
+  @staticmethod
+  def _check_timeout(req: SolverRequest, start_time: datetime.datetime, step_name: str):
+    now = datetime.datetime.now()
+    wait_time_sec = (now - start_time).total_seconds()
+    if wait_time_sec > req.maxTimeout :
+      raise FunctionTimedOut("Timed out on " + step_name)
+
+  def _evil_logic(self, req: SolverRequest, driver: WebDriver, start_time : datetime.datetime) -> SolverResponse:
     res = SolverResponse({})
 
     # navigate to the page
@@ -183,7 +194,6 @@ class Solver(object) :
     # wait for the page
     if flare_solver.utils.get_config_log_html():
       logging.debug(f"Response HTML:\n{driver.page_source}")
-    html_element = driver.find_element(By.TAG_NAME, "html")
     page_title = driver.title
 
     # find access denied titles
@@ -221,13 +231,17 @@ class Solver(object) :
     if challenge_found:
       logging.info("Challenge detected, to solve it")
 
+      html_element = None
       attempt = 0
+
       while True:
+        Solver._check_timeout(req, start_time, "challenge loading wait")
         logging.info("Wait challenge loading, attempt #" + str(attempt))
         # Get screenshot of full page (all elements is in shadowroot)
         iframe_image = self._get_screenshot(driver)
         click_coord = Solver._get_flare_click_point(iframe_image)
         if click_coord :
+          html_element = driver.find_element(By.TAG_NAME, "html")
           logging.info("Click by coords: " + str(click_coord[0]) + ", " + str(click_coord[1]))
           Solver._click_verify(driver, click_coord)
           break
